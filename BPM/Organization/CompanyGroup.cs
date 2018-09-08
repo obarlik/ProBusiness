@@ -4,12 +4,23 @@ using System.Text;
 
 namespace BPM.Organization
 {
-    public class CompanyGroup
+    public class CompanyGroup : IPersistent
     {
+        public Guid Oid { get; set; }
+        public Guid? UpdateUserId { get; set; }
+        public DateTime UpdateTime { get; set; }
+
+        public string Name { get; set; }
+        public Company Lead { get; set; }
+
+        public ICollection<Company> Companies { get; }
+
         public CompanyGroup()
         {
         }
-        
-        public string Name { get; set; }
+
+        public void AfterConstruction()
+        {
+        }
     }
 }

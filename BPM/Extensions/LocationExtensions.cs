@@ -2,32 +2,23 @@
 
 namespace BPM
 {
-    public class Location
+    public static class LocationExtensions
     {
-        public Location()
-        {
-        }
-
-        public double Latitude { get; set; }
-
-        public double Longtitude { get; set; }
-
-
         /// <summary>
         /// Calculate distance using the Haversine Formula
         /// </summary>
         /// <param name="location"></param>
         /// <returns></returns>
-        public double DistanceTo(Location location)
+        public static double DistanceTo(this ILocation from, ILocation to)
         {
             // Coordinates in decimal degrees (e.g. 2.89078, 12.79797)
-            var lon1 = Longtitude;
-            var lat1 = Latitude;
+            var lon1 = from.Longtitude;
+            var lat1 = from.Latitude;
 
-            var lon2 = location.Longtitude;
-            var lat2 = location.Latitude;
+            var lon2 = to.Longtitude;
+            var lat2 = to.Latitude;
 
-            var R = 6371000;  // radius of Earth in meters
+            var R = 6371000.0;  // radius of Earth in meters
 
             var rad = new Func<double, double>(d => (d * Math.PI) / 180.0);
 
@@ -43,7 +34,7 @@ namespace BPM
             var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
 
             var meters = R * c;         // output distance in meters
-            
+
             return meters;
         }
     }

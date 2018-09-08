@@ -1,22 +1,21 @@
 ﻿using BPM.Persistency;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace BPM.Security
+namespace BPM.Locations
 {
-    public class Role : IPersistent
+    public class District : IPersistent
     {
         public Guid Oid { get; set; }
         public Guid? UpdateUserId { get; set; }
         public DateTime UpdateTime { get; set; }
 
         public string Name { get; set; }
-        public string Description { get; set; }
-        
-        public Role()
+
+
+        public District()
         {
         }
+
 
         public void AfterConstruction()
         {

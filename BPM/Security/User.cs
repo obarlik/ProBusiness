@@ -1,4 +1,6 @@
-﻿using BPM.Organization;
+﻿using BPM.Locations;
+using BPM.Organization;
+using BPM.Persistency;
 using System;
 
 namespace BPM.Security

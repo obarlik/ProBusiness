@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BPM.Extensions
+namespace BPM.Persistency
 {
     public static class PersistentExtensions
     {

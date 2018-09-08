@@ -2,17 +2,19 @@
 using BPM.Persistency;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
-namespace BPM.Organization
+namespace BPM.Parties
 {
-    public class Office : IPersistent, IAddress, ILocation
+    public abstract class Party : IAddress
     {
-        public Guid Oid { get; set; }
-        public Guid? UpdateUserId { get; set; }
-        public DateTime UpdateTime { get; set; }
-
         public string Name { get; set; }
-        public Company Company { get; set; }
+        public string TaxNumber { get; set; }
+
+        public string Phone { get; set; }
+        public string MobilePhone { get; set; }
+        public string Fax { get; set; }
+        public string EMail { get; set; }
 
         public Country Country { get; set; }
         public City City { get; set; }
@@ -25,14 +27,7 @@ namespace BPM.Organization
         public double Longtitude { get; set; }
 
 
-        public ICollection<Department> Departments { get; }
-
-
-        public Office()
-        {
-        }
-
-        public void AfterConstruction()
+        public Party()
         {
         }
     }

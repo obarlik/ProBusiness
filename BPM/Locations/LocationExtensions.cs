@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BPM
+namespace BPM.Locations
 {
     public static class LocationExtensions
     {

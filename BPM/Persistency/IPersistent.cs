@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BPM
+namespace BPM.Persistency
 {
     public interface IPersistent
     {

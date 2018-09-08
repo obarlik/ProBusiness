@@ -60,35 +60,20 @@ namespace Parsing
                 {
                     case '+': Next(); result += ReadTerm(); break;
                     case '-': Next(); result -= ReadTerm(); break;
-                    case '=': Next(); result = result == ReadTerm() ? 1 : 0; break;
-                    case '>': Next(); result = result > ReadTerm() ? 1 : 0; break;
+                        
+                    case '?':
+                        result = ReadInlineSwitch(result);
+                        break;
 
+                    case '=':
                     case '<':
                     case '!':
-                        var old = Current;
-                        Next();
-
-                        if ((old == '<' && Current == '>')
-                         || (old == '!' && Current == '='))
-                        {
-                            Next();
-                            result = result != ReadTerm() ? 1 : 0;
-                        }
-                        else if (old == '<')
-                            result = result < ReadTerm() ? 1 : 0;
-                        else if (old == '!')
-                            throw Error("= expected!");
-                        
+                    case '>':
+                    case '&':
+                    case '|':
+                        result = ReadBooleanExpression(result);
                         break;
 
-                    case '?':
-                        Next();
-                        var fTrue = ReadExpression();
-                        Match(":");
-                        var fFalse = ReadExpression();
-
-                        result = result != 0m ? fTrue : fFalse;
-                        break;
 
                     default:
                         return result;
@@ -98,6 +83,72 @@ namespace Parsing
             return result;
         }
 
+
+        private decimal ReadBooleanExpression(decimal result)
+        {
+            switch (Current)
+            {
+                case '&':
+                    Next();
+                    result = result != 0m && ReadTerm() != 0m ? 1m : 0m;
+                    break;
+
+                case '|':
+                    Next();
+                    result = result != 0m || ReadTerm() != 0m ? 1m : 0m;
+                    break;
+            }
+
+            return result;
+        }
+
+
+        private decimal ReadInlineSwitch(decimal result)
+        {
+            Match("?");
+            var fTrue = ReadExpression();
+            Match(":");
+            var fFalse = ReadExpression();
+
+            return result != 0m ? fTrue : fFalse;
+        }
+
+
+        private decimal ReadComparisonExpression(decimal result)
+        {
+            switch (Current)
+            {
+                case '=':
+                    Next();
+                    result = result == ReadTerm() ? 1m : 0m;
+                    break;
+
+                case '>':
+                    Next();
+                    result = result > ReadTerm() ? 1m : 0m;
+                    break;
+
+                case '<':
+                case '!':
+                    var old = Current;
+                    Next();
+
+                    if ((old == '<' && Current == '>')
+                     || (old == '!' && Current == '='))
+                    {
+                        Next();
+                        result = result != ReadTerm() ? 1m : 0m;
+                    }
+                    else if (old == '<')
+                        result = result < ReadTerm() ? 1m : 0m;
+                    else if (old == '!')
+                        throw Error("= expected!");
+
+                    break;
+            }
+
+            return result;
+        }
 
         private decimal ReadTerm()
         {
@@ -117,6 +168,13 @@ namespace Parsing
                     case '/':
                         Next();
                         result /= ReadFactor();
+                        break;
+
+                    case '=':
+                    case '<':
+                    case '!':
+                    case '>':
+                        result = ReadComparisonExpression(result);
                         break;
 
                     default:

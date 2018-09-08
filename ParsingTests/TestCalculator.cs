@@ -29,6 +29,7 @@ namespace ParsingTests
                 new object[] { "(2*(1+1)+1)*x^2/2", 250m },
                 new object[] { "x=10?10:0", 10m },
                 new object[] { "x  !=   10   ?  10  :   0", 0m },
+                new object[]{ "x<11 & x>9 ? 1 : x<5 ? 2 : 3", 1m}
             };
 
             foreach (var t in tests)

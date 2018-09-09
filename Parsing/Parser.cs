@@ -13,14 +13,27 @@ namespace Parsing
         }
 
 
-        protected IEnumerator<char> Buffer;
+        protected IEnumerator<char> BufferEnumerator;
 
         public int Index { get; protected set; }
 
 
-        protected virtual void Parse(string s)
+        string _Buffer;
+
+        public string Buffer
         {
-            Buffer = s.GetEnumerator();
+            get { return _Buffer; }
+            set
+            {
+                _Buffer = value;
+                Initialize(_Buffer);
+            }
+        }
+
+
+        protected void Initialize(string s)
+        {
+            BufferEnumerator = s.GetEnumerator();
             Index = -1;
             Next();
         }
@@ -28,7 +41,7 @@ namespace Parsing
 
         public char Current
         {
-            get { return !Eof ? Buffer.Current : default(char); }
+            get { return !Eof ? BufferEnumerator.Current : default(char); }
         }
 
 
@@ -37,7 +50,7 @@ namespace Parsing
 
         public void Next()
         {
-            Eof = !Buffer.MoveNext();
+            Eof = !BufferEnumerator.MoveNext();
 
             if (!Eof) Index++;
         }
@@ -68,7 +81,7 @@ namespace Parsing
 
         public int SkipWhite()
         {
-            return ReadWhile(c => char.IsWhiteSpace(c))
+            return ReadWhile(() => char.IsWhiteSpace(Current))
                    .Count();
         }
 
@@ -85,9 +98,9 @@ namespace Parsing
                 regEx = regEx + "$";
 
             return new string(
-                ReadWhile(c =>
+                ReadWhile(() =>
                 {
-                    sb.Append(c);
+                    sb.Append(Current);
 
                     return Regex.IsMatch(sb.ToString(), regEx);
                 })
@@ -101,14 +114,13 @@ namespace Parsing
         }
 
 
-
         public void Match(string m)
         {
             SkipWhite();
 
             var i = 0;
 
-            if (ReadWhile(c => i < m.Length && c == m[i++]).Count() != m.Length)
+            if (ReadWhile(() => i < m.Length && Current == m[i++]).Count() != m.Length)
                 throw Error(m + " expected!");
         }
 

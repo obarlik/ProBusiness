@@ -58,9 +58,9 @@ namespace Parsing
         }
         
 
-        public Grammar ParseGrammar(string s)
+        public Grammar ParseGrammar(string grammar)
         {
-            Parse(s);
+            Buffer = grammar;
             return ReadGrammar();
         }
         

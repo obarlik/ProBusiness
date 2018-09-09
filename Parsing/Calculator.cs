@@ -32,7 +32,7 @@ namespace Parsing
 
         public decimal Calculate(string expression)
         {
-            Parse(expression);
+            Buffer = expression;
             return ReadExpression();
         }
         

@@ -5,7 +5,7 @@ using Parsing;
 namespace ParsingTests
 {
     [TestClass]
-    public class TestCalculator
+    public class CalculatorTests
     {
         [TestMethod]
         public void TestCalculation()

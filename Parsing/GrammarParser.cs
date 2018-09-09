@@ -6,80 +6,80 @@ using System.Text.RegularExpressions;
 
 namespace Parsing
 {
-    public class Grammar : Dictionary<string, Rule>
-    {
-        
-    }
-
-
-    public class Rule
-    {
-        public string RuleName;
-        public RHS Rhs;        
-    }
-
-
-    public class RHS : List<Sequence>
-    {
-    }
-
-
-    public class Sequence
-    {
-        public SType SeqType;
-        public string NT;
-        public RHS ORG;
-
-        public Sequence(SType seqType, string nt, RHS org)
-        {
-            SeqType = seqType;
-            NT = nt;
-            ORG = org;
-        }
-    }
-
-
-    public enum SType
-    {
-        Empty,
-        RuleName,
-        Terminal,
-        Option,
-        Repetition,
-        Group
-    }
-
-
-
     public class GrammarParser : Parser
     {
+        public class Grammar : Parser
+        {
+            public Dictionary<string, Rule> Rules = new Dictionary<string, Rule>();
+        }
+
+
+        public class Rule
+        {
+            public string RuleName;
+            public Sequence Sequence;
+        }
+
+
+        public class Sequence
+        {
+            public Sequence Alternative;
+            public Sequence Next;
+        }
+
+
+        public class Empty : Sequence
+        {
+
+        }
+
+        public class Terminal : Sequence
+        {
+            public string Value;
+        }
+
+
+        public class RuleName : Sequence
+        {
+            public string Name;
+        }
+
+
+
+        public class Optional : Sequence
+        {
+            public Sequence Sequence { get; internal set; }
+        }
+
+
+        public class Repetition : Sequence
+        {
+            public Sequence Sequence { get; internal set; }
+        }
+
+
+        public class Grouping : Sequence
+        {
+            public Sequence Sequence { get; internal set; }
+        }
+
+
         public GrammarParser()
         {
         }
         
 
-        public Grammar ParseGrammar(string grammar)
+        public Grammar ReadEbnfGrammar(string text)
         {
-            Buffer = grammar;
-            return ReadGrammar();
-        }
-        
+            Buffer = text;
 
-        public void Parse(string s, Grammar grammar)
-        {
-
-        }
-
-
-
-        public Grammar ReadGrammar()
-        {
             var grammar = new Grammar();
-            Rule rule;
-
-            while ((rule = ReadRule()) != null)
+            
+            while (!Eof)
             {
-                grammar.Add(rule.RuleName, rule);
+                var rule = ReadRule();
+
+                grammar.Rules.Add(rule.RuleName, rule);
             }
 
             return grammar;
@@ -87,14 +87,14 @@ namespace Parsing
 
 
 
-        public string ReadRuleName()
+        protected string ReadRuleName()
         {
             SkipWhite();
             return ReadRegex("[A-Za-z][A-Za-z0-9_]*");
         }
 
 
-        public Rule ReadRule()
+        protected Rule ReadRule()
         {
             var rule = new Rule();
 
@@ -103,7 +103,7 @@ namespace Parsing
 
             Match("=");
 
-            rule.Rhs = ReadRhs();
+            rule.Sequence = ReadSequence();
 
             Match(";");
 
@@ -111,118 +111,130 @@ namespace Parsing
         }
 
 
-        public RHS ReadRhs()
+        protected Sequence ReadSequence()
         {
-            var rhs = new RHS();
+            Sequence seq = null;
 
-            while (!Eof)
+            if (!Eof)
             {
                 SkipWhite();
 
-                if (IsCharacter)
-                    rhs.Add(new Sequence(SType.RuleName, ReadRuleName(), null));
+                if (IsLetter)
+                    seq = new RuleName() { Name = ReadRuleName() };
                 else
                 {
                     switch (Current)
                     {
                         case '\'':
                         case '"':
-                            rhs.Add(new Sequence(SType.Terminal, ReadTerminal(), null));
+                            seq = new Terminal() { Value = ReadTerminal() };
                             break;
 
                         case '[':
                             Next();
-                            rhs.Add(new Sequence(SType.Option, null, ReadRhs()));
+                            seq = new Optional() { Sequence = ReadSequence() };
                             Match("]");
                             break;
 
                         case '{':
                             Next();
-                            rhs.Add(new Sequence(SType.Repetition, null, ReadRhs()));
+                            seq = new Repetition() { Sequence = ReadSequence() };
                             Match("}");
                             break;
 
                         case '(':
                             Next();
-                            rhs.Add(new Sequence(SType.Group, null, ReadRhs()));
+                            seq = new Grouping() { Sequence = ReadSequence() };
                             Match(")");
                             break;
-
-                        case ',':
-                            Next();
-                            continue;
                     }
-
                 }
 
-                break;
+                SkipWhite();
+
+                if (!Eof)
+                    switch (Current)
+                    {
+                        case ',':
+                            Next();
+
+                            if (seq == null)
+                                seq = new Empty();
+
+                            seq.Next = ReadSequence();
+                            break;
+
+                        case '|':
+                            Next();
+
+                            if (seq == null)
+                                seq = new Empty();
+
+                            seq.Alternative = ReadSequence();
+                            break;
+                    }
             }
 
-            return rhs;
+            if (seq == null)
+                seq = new Empty();
+
+            return seq;
         }
 
 
-        public bool IsLower
+        protected bool IsLower
         {
             get { return "abcdefghijklmnopqrstuvwxyz".Contains(Current); }
         }
 
 
-        public bool IsUpper
+        protected bool IsUpper
         {
             get { return "ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(Current); }
         }
 
 
-        public bool IsLetter
+        protected bool IsLetter
         {
             get { return IsLower || IsUpper; }
         }
 
 
-        public bool IsDigit
+        protected bool IsDigit
         {
             get { return "0123456789".Contains(Current); }
         }
 
 
-        public bool IsSpecial
+        protected bool IsSpecial
         {
             get { return "()[]{}<=>-+*/\\\"'.,:;|@$%&#_!?^~".Contains(Current); }
         }
 
 
-        public bool IsCharacter
+        protected bool IsCharacter
         {
             get { return IsLetter || IsDigit || IsSpecial; }
         }
 
 
-        public string ReadTerminal()
+        protected string ReadTerminal()
         {
             var end = Current;
 
-            if (end != '"' && end != '\"')
+            if (end != '"' && end != '\'')
                 throw Error("Terminal expected!");
 
             Next();
 
             var sb = new StringBuilder();
 
-            while (!Eof)
+            if (!Eof)
             {
                 sb.Append(
                     ReadWhile(() => Current != end && IsCharacter,
                               s => s == 1 || Current == '\\')
                     .ToArray());
-
-                Next();
-                SkipWhite();
-
-                end = Current;
-
-                if (end != '"' && end != '\"')
-                    break;
             }
 
             return sb.ToString();

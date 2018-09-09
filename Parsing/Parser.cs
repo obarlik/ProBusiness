@@ -15,12 +15,12 @@ namespace Parsing
 
         protected IEnumerator<char> BufferEnumerator;
 
-        public int Index { get; protected set; }
+        protected int Index { get; set; }
 
 
         string _Buffer;
 
-        public string Buffer
+        protected string Buffer
         {
             get { return _Buffer; }
             set
@@ -39,16 +39,16 @@ namespace Parsing
         }
 
 
-        public char Current
+        protected char Current
         {
             get { return !Eof ? BufferEnumerator.Current : default(char); }
         }
 
 
-        public bool Eof { get; protected set; }
+        protected bool Eof { get; set; }
 
 
-        public void Next()
+        protected void Next()
         {
             Eof = !BufferEnumerator.MoveNext();
 
@@ -56,7 +56,7 @@ namespace Parsing
         }
 
 
-        public IEnumerable<char> ReadWhile(
+        protected IEnumerable<char> ReadWhile(
             Func<bool> condition, Func<int, bool> escapeCondition = null)
         {
             while (!Eof)
@@ -79,15 +79,15 @@ namespace Parsing
         }
 
 
-        public int SkipWhite()
+        protected int SkipWhite()
         {
             return ReadWhile(() => char.IsWhiteSpace(Current))
                    .Count();
         }
 
 
-        
-        public string ReadRegex(string regEx)
+
+        protected string ReadRegex(string regEx)
         {
             var sb = new StringBuilder();
 
@@ -108,13 +108,13 @@ namespace Parsing
         }
 
 
-        public int ReadInteger()
+        protected int ReadInteger()
         {
             return int.Parse(ReadRegex(@"\d+"));
         }
 
 
-        public void Match(string m)
+        protected void Match(string m)
         {
             SkipWhite();
 
@@ -125,7 +125,7 @@ namespace Parsing
         }
 
 
-        public Exception Error(string msg)
+        protected Exception Error(string msg)
         {
             return new InvalidOperationException(msg + " @" + Index);
         }

@@ -30,23 +30,12 @@ namespace Parsing
         }
 
 
-        decimal CalculationResult;
-
-
         public decimal Calculate(string expression)
         {
             Parse(expression);
-            return CalculationResult;
+            return ReadExpression();
         }
-
-
-        protected override void Parse(string s)
-        {
-            base.Parse(s);
-
-            CalculationResult = ReadExpression();
-        }
-
+        
 
         private decimal ReadExpression()
         {

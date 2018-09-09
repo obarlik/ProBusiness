@@ -14,7 +14,8 @@ namespace Parsing
 
 
         protected IEnumerator<char> Buffer;
-        protected int Index;
+
+        public int Index { get; protected set; }
 
 
         protected virtual void Parse(string s)
@@ -25,16 +26,16 @@ namespace Parsing
         }
 
 
-        protected char Current
+        public char Current
         {
             get { return !Eof ? Buffer.Current : default(char); }
         }
 
 
-        protected bool Eof;
+        public bool Eof { get; protected set; }
 
 
-        protected void Next()
+        public void Next()
         {
             Eof = !Buffer.MoveNext();
 
@@ -42,24 +43,38 @@ namespace Parsing
         }
 
 
-        protected IEnumerable<char> ReadWhile(Func<char, bool> condition)
+        public IEnumerable<char> ReadWhile(
+            Func<bool> condition, Func<int, bool> escapeCondition = null)
         {
-            while (!Eof && condition(Current))
+            while (!Eof)
             {
+                if (!condition())
+                {
+                    if (escapeCondition == null
+                     || escapeCondition(0))
+                        break;
+
+                    Next();
+
+                    if (Eof || escapeCondition(1))
+                        break;
+                }
+
                 yield return Current;
                 Next();
             }
         }
 
 
-        protected int SkipWhite()
+        public int SkipWhite()
         {
             return ReadWhile(c => char.IsWhiteSpace(c))
                    .Count();
         }
 
 
-        protected string ReadRegex(string regEx)
+        
+        public string ReadRegex(string regEx)
         {
             var sb = new StringBuilder();
 
@@ -80,14 +95,14 @@ namespace Parsing
         }
 
 
-        protected int ReadInteger()
+        public int ReadInteger()
         {
             return int.Parse(ReadRegex(@"\d+"));
         }
 
 
 
-        protected void Match(string m)
+        public void Match(string m)
         {
             SkipWhite();
 
@@ -98,7 +113,7 @@ namespace Parsing
         }
 
 
-        protected Exception Error(string msg)
+        public Exception Error(string msg)
         {
             return new InvalidOperationException(msg + " @" + Index);
         }
